@@ -1,0 +1,16 @@
+{
+  "description": "Pre-tool-call runtime guardrails that catch 82.5% of common agent-fault errors via soft prompt augmentation.",
+  "publisher": "huanmeng9527",
+  "license": "MIT-0",
+  "useCase": "Add a first line of defense against retry loops, complex-task overload, and tool-argument or path mismatches in multi-step coding agents.",
+  "deploymentGeography": "Global",
+  "risks": [
+    {"risk": "Soft prompt augmentation adds 150-400 tokens per fired guard, increasing latency and cost", "mitigation": "Tune thresholds in references/thresholds.md; disable via env var or config switch if overhead is unacceptable"},
+    {"risk": "Default thresholds are calibrated for workstation usage; cloud/sandbox deployments may see false positives or misses", "mitigation": "Review references/audit-log.md and validate thresholds with the claw-rl-prm-judge skill before production"},
+    {"risk": "Guardrails are advisory only and never block requests or modify tool output", "mitigation": "Pair with ClawGuard intent-verifier or similar enforcement layer when blocking is required"}
+  ],
+  "output": {
+    "types": ["text", "markdown", "code", "shell commands", "configuration", "guidance"],
+    "format": "Markdown guidance with inline JSON config examples and ESM handler reference"
+  }
+}
