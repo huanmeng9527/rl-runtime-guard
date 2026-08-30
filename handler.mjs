@@ -36,8 +36,8 @@ export const DEFAULT_CONFIG = {
   recentQueryWindow: 10,
   /** Maximum length of a single exec command (soft advisory). */
   maxExecLength: 2000,
-  /** Audit log path; ~ expansion supported. */
-  auditLogPath: '~/.openclaw/logs/audit/rl-guard-decisions.jsonl',
+  /** Audit log path; ~ expansion supported. Set to '' or null to disable. */
+  auditLogPath: '',
   /** Master switch; can also be overridden by RL_GUARD_DISABLED=1. */
   enabled: true,
 };
@@ -270,8 +270,11 @@ export function applyGuards(ctx, sessionStore = new Map(), config = { ...DEFAULT
   logDecision({
     sessionKey,
     decisions,
-    userContentPreview: userContent.substring(0, 80),
+    // No userContentPreview — privacy by default. Log only metadata:
+    // decisions fired and prompt length. Enable explicit audit via
+    // config.auditLogPath only when the operator wants telemetry.
     guardPromptLength: guardPrompt.length,
+    userContentLength: userContent.length,
   }, config);
 
   return decisions;

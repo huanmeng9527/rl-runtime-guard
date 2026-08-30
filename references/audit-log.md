@@ -1,96 +1,86 @@
-# Audit Log Format
+# Audit Log (opt-in)
 
-The guard writes one JSON object per line to:
-`~/.openclaw/logs/audit/rl-guard-decisions.jsonl` (configurable).
+**As of v1.0.5, audit logging is OFF by default.** This is a privacy-by-default change — no user content is captured unless you explicitly opt in.
 
-## Schema
+## Why this changed
+
+The original handler captured the first 80 characters of every user message that triggered a guard. This is useful for debugging but creates a privacy concern: prompts may contain secrets, customer data, proprietary code, or personal information. If you do not need audit telemetry, **do not enable it**.
+
+## How to enable (opt-in)
+
+Set `auditLogPath` in your config to a path of your choice:
+
+```json
+{
+  "auditLogPath": "~/.openclaw/logs/audit/rl-guard-decisions.jsonl"
+}
+```
+
+The path supports `~` expansion. The skill creates the parent directory if it does not exist.
+
+## Schema (when enabled)
 
 ```typescript
 type AuditEntry = {
   timestamp: string;         // ISO 8601 UTC
   sessionKey: string;        // session identifier (anonymized by caller)
   decisions: string[];       // list of guards that fired
-  userContentPreview: string; // first 80 chars of user message
   guardPromptLength: number; // bytes of injected prompt
+  userContentLength: number; // length of user message in chars
   error?: string;            // only present if the guard failed
 };
 ```
 
+**Important**: when audit logging is enabled, the schema records `userContentLength` (a number) and never stores the actual user message text.
+
 ## Example entries
 
-```jsonl
-{"timestamp":"2026-08-22T19:12:34.123Z","sessionKey":"agent:main:abc123","decisions":["complex_task","platform_path_hint"],"userContentPreview":"请帮我部署这个项目到 ~/Desktop，配置好后执行以下步骤：1. build 2. test 3.","guardPromptLength":1240}
-{"timestamp":"2026-08-22T19:13:01.456Z","sessionKey":"agent:main:abc123","decisions":["retry_loop"],"userContentPreview":"还是不行啊，重新跑一下","guardPromptLength":620}
-{"timestamp":"2026-08-22T19:14:00.000Z","sessionKey":"agent:main:abc123","decisions":[],"userContentPreview":""}
+```json
+{"timestamp":"2026-08-30T18:30:00Z","sessionKey":"agent-main-abc123","decisions":["retry_loop"],"guardPromptLength":215,"userContentLength":48}
+{"timestamp":"2026-08-30T18:30:01Z","sessionKey":"agent-main-abc123","decisions":["complex_task","platform_path_hint"],"guardPromptLength":512,"userContentLength":720}
 ```
-
-Wait — entries with empty decisions only happen if the guard fired an
-error. Most requests that don't match any pattern produce no audit entry.
 
 ## Common queries
 
-### How often is each guard firing?
+Count guard fires per session:
 
 ```bash
-jq -r '.decisions[]' ~/.openclaw/logs/audit/rl-guard-decisions.jsonl \
-  | sort | uniq -c | sort -rn
+jq -s 'group_by(.sessionKey) | map({session: .[0].sessionKey, count: length})' \
+  ~/.openclaw/logs/audit/rl-guard-decisions.jsonl
 ```
 
-Output:
-```
-  145 retry_loop
-   87 complex_task
-   23 platform_path_hint
-```
-
-### Which sessions have the most guards?
+Show recent decisions:
 
 ```bash
-jq -r '"\(.sessionKey) \(.decisions | length)"' ~/.openclaw/logs/audit/rl-guard-decisions.jsonl \
-  | awk '{s[$1]+=$2} END {for (k in s) print s[k], k}' | sort -rn | head
+tail -f ~/.openclaw/logs/audit/rl-guard-decisions.jsonl | jq .
 ```
 
-### Error rate in guard execution
+## Disabling after enabling
+
+Set `auditLogPath` back to empty string or `null`:
+
+```json
+{ "auditLogPath": "" }
+```
+
+## Purging old logs
 
 ```bash
-jq -r 'select(.error != null) | .error' \
-  ~/.openclaw/logs/audit/rl-guard-decisions.jsonl | sort | uniq -c
+rm ~/.openclaw/logs/audit/rl-guard-decisions.jsonl
 ```
 
-### Time-window filtering
+This is a permanent deletion. Make sure no compliance or debug process depends on the log first.
+
+## Permission recommendation
+
+If you do enable audit logging, restrict file permissions:
 
 ```bash
-# Last 24 hours
-START=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-jq -r "select(.timestamp > \"$START\") | .decisions[]" \
-  ~/.openclaw/logs/audit/rl-guard-decisions.jsonl | sort | uniq -c
+chmod 600 ~/.openclaw/logs/audit/rl-guard-decisions.jsonl
 ```
 
-## Privacy notes
+The skill does not set restrictive permissions automatically — that is the operator's responsibility.
 
-The audit log contains:
-- **sessionKey** — opaque identifier, no PII unless you put it there
-- **userContentPreview** — first 80 chars of user messages (may contain
-  sensitive info)
+## Retired field: `userContentPreview`
 
-If you're deploying in a privacy-sensitive environment:
-
-1. Set `auditLogPath` to a path inside a restricted directory
-2. Or set `auditLogPath` to `/dev/null` to disable logging entirely
-3. Add the path to your log rotation policy (default retention: 30 days
-  recommended)
-
-## Log rotation
-
-The guard never rotates its own log. Use `logrotate` or equivalent:
-
-```
-# /etc/logrotate.d/openclaw-rl-guard
-~/.openclaw/logs/audit/rl-guard-decisions.jsonl {
-    daily
-    rotate 30
-    compress
-    missingok
-    notifempty
-}
-```
+Earlier versions (1.0.0 - 1.0.4) captured a preview of the user message. That field has been **removed** in 1.0.5+. If you upgrade from an older version, the old field will simply not appear in new entries; existing log entries are not retroactively modified.

@@ -71,18 +71,19 @@ openclaw hooks list | grep rl-runtime-guard
 tail -f ~/.openclaw/logs/audit/rl-guard-decisions.jsonl
 ```
 
-Each decision emits a JSONL line:
+Each decision emits a JSONL line (only if `auditLogPath` is set):
 
 ```json
 {
-  "ts": "2026-08-30T18:30:00Z",
-  "session_id": "agent-main-abc123",
-  "guard": "retry_loop_guard",
-  "trigger": "jaccard=0.62 over last 3 messages",
-  "action": "inject_reminder",
-  "token_overhead": 215
+  "timestamp": "2026-08-30T18:30:00Z",
+  "sessionKey": "agent-main-abc123",
+  "decisions": ["retry_loop"],
+  "guardPromptLength": 215,
+  "userContentLength": 48
 }
 ```
+
+By default, **no log is written**. To capture decisions for telemetry or debugging, set `auditLogPath` explicitly.
 
 ---
 
@@ -95,10 +96,12 @@ Edit `~/.openclaw/hooks/rl-runtime-guard/config.json`:
   "complexTaskThreshold": 400,
   "retryLoopThreshold": 0.4,
   "maxExecLength": 2000,
-  "auditLogPath": "~/.openclaw/logs/audit/rl-guard-decisions.jsonl",
+  "auditLogPath": "",
   "enabled": true
 }
 ```
+
+> **Privacy by default**: audit logging is **OFF** in v1.0.5+. Set `auditLogPath` to enable. The log captures only metadata (decisions, prompt length, message length) — never raw user content. See `references/audit-log.md`.
 
 ### Threshold tuning
 
