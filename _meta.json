@@ -1,5 +1,5 @@
 {
-  "description": "Catch AI agent failures before they happen — retry loops, stuck multi-step tasks, wrong-tool-or-path mistakes — by injecting smart reminders before each request.",
+  "description": "Soft, opt-in runtime guardrails for AI agents — advisory reminders injected before each request, never blocking or modifying tool output. Easy to disable.",
   "publisher": "huanmeng9527",
   "license": "MIT-0",
   "useCase": "Stop an agent from getting stuck in retry loops or skipping steps on a long multi-step task, or warn when a Windows path is pasted into a Linux shell. First line of defense before running a quality review.",

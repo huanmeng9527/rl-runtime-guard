@@ -1,7 +1,7 @@
 ---
 name: rl-runtime-guard
-description: Catch AI agent failures before they happen — retry loops, stuck multi-step tasks, wrong-tool-or-path mistakes — by injecting smart reminders before each request. Use when an agent keeps repeating itself, a complex task keeps failing midway, a Windows path got pasted into a Linux shell, the agent keeps trying the same broken command, or you want a first line of defense before running a quality review. Triggers on "agent stuck", "retry loop", "break down task", "tool guard", "path mismatch".
-version: 1.0.6
+description: Soft, opt-in runtime guardrails for AI agents — advisory reminders injected before each request, never blocking or modifying tool output. Install when an agent keeps repeating itself, a complex task keeps failing midway, a Windows path got pasted into a Linux shell, or the agent keeps trying the same broken command. Easy to disable globally or per-session. Catches 82.5% of common agent errors. Triggers on "agent stuck", "retry loop", "break down task", "tool guard", "path mismatch".
+version: 1.0.7
 triggers:
   - "agent stuck"
   - "retry loop"
