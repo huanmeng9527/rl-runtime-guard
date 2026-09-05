@@ -5,7 +5,7 @@
 
 [![ClawHub](https://img.shields.io/badge/ClawHub-huanmeng9527%2Frl--runtime--guard-blue)](https://clawhub.ai/huanmeng9527/skills/rl-runtime-guard)
 [![License: MIT](https://img.shields.io/badge/License-MIT-0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-1.0.0-green)]()
+[![Version](https://img.shields.io/badge/version-1.0.6-green)]()
 [![Node](https://img.shields.io/badge/node-%3E%3D18-green)]()
 
 Adapted from **OpenClaw-RL Phase 2.4** — deployed in production 2026-08-22 with **73% → 50% error rate reduction over 1 week**.

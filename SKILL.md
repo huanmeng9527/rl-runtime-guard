@@ -1,14 +1,15 @@
 ---
 name: rl-runtime-guard
-description: Pre-tool-call runtime guardrails for AI agents. Catches three classes of common agent errors at runtime — complex tasks not broken down (43% of failures), retry loops (27%), and tool/path mismatches (11%) — via soft prompt augmentation. Calibrated on 12,000+ real interactions. Triggers on "enable guard", "agent guardrails", "prevent retry loop", "break down complex task", "tool path check".
-version: 0.1.0
+description: Catch AI agent failures before they happen — retry loops, stuck multi-step tasks, wrong-tool-or-path mistakes — by injecting smart reminders before each request. Use when an agent keeps repeating itself, a complex task keeps failing midway, a Windows path got pasted into a Linux shell, the agent keeps trying the same broken command, or you want a first line of defense before running a quality review. Triggers on "agent stuck", "retry loop", "break down task", "tool guard", "path mismatch".
+version: 1.0.6
 triggers:
-  - "enable guard"
-  - "agent guardrails"
-  - "prevent retry loop"
-  - "break down complex task"
-  - "tool path check"
+  - "agent stuck"
+  - "retry loop"
+  - "break down task"
+  - "tool guard"
+  - "path mismatch"
   - "agent self-correction"
+  - "agent loop"
 metadata:
   openclaw:
     requires:
@@ -25,6 +26,16 @@ Pre-tool-call runtime guardrails that catch **82.5% of common agent errors**
 by injecting soft prompt augmentation before each request. Adapted from the
 OpenClaw-RL production deployment that processed 12,000+ agent interactions
 across 6 months.
+
+## Quick Reference
+
+| Symptom / situation | What catches it | Default threshold |
+|---------------------|-----------------|-------------------|
+| Agent repeats the same request (retry loop) | `retry_loop_guard` | Jaccard similarity ≥ 0.4 over last 3 messages |
+| Long multi-step request, agent might skip steps | `complex_task_guard` | Message ≥ 400 chars or multi-step keywords |
+| Long shell command that may break | `tool_guard` (tool_arg_complex) | exec length > 2000 chars |
+| Windows path (`C:\...`) pasted on Linux/Mac | `tool_guard` (path_mismatch) | Platform-incompatible path detected |
+| Want a first defense before PRM judge | All three guards | Default config |
 
 ## What this skill does
 
